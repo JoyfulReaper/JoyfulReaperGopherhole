@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../HappyGopher/HappyGopher.Extensibility/HappyGopher.Extensibility.csproj" />
+  <Project Path="HappyGopherPages.RandomSteam/HappyGopherPages.RandomSteam.csproj" />
+</Solution>
