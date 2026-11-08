@@ -10,7 +10,7 @@ namespace HappyGopherPages.RandomSteam;
 public sealed class RandomSteamGamePage(
     GopherServerInfo serverInfo,
     IRandomSteamClient randomSteamClient,
-    ILogger<RandomSteamGamePage> logger) : IGopherPage
+    ILogger<RandomSteamGamePage> logger) : IGopherSubselectorPage
 {
     public string Selector => "/randomsteam";
 
@@ -21,16 +21,24 @@ public sealed class RandomSteamGamePage(
     {
         await using GopherResponseWriter writer = new(output);
 
+        string? steamIdInput = request.Input;
+
+        if (steamIdInput is null &&
+            request.Selector.StartsWith("/randomsteam/", StringComparison.Ordinal))
+        {
+            steamIdInput = request.Selector["/randomsteam/".Length..];
+        }
+
         await writer.WriteInfoAsync("Random Steam Game Picker", cancellationToken);
         await writer.WriteInfoAsync("========================", cancellationToken);
         await writer.WriteInfoAsync(string.Empty, cancellationToken);
 
-        if (request.Input is null)
+        if (steamIdInput is null)
         {
             await writer.WriteInfoAsync("Can't decide what to play?", cancellationToken);
             await writer.WriteInfoAsync("Let the computer decide for you.", cancellationToken);
         }
-        else if (!SteamIdInputParser.TryParse(request.Input, out long steamId))
+        else if (!SteamIdInputParser.TryParse(steamIdInput, out long steamId))
         {
             await writer.WriteInfoAsync("Invalid Steam ID.", cancellationToken);
             await writer.WriteInfoAsync("Enter a 17-digit SteamID64.", cancellationToken);
@@ -105,6 +113,16 @@ public sealed class RandomSteamGamePage(
                     "RandomSteam request timed out.",
                     cancellationToken);
             }
+
+            await writer.WriteInfoAsync(string.Empty, cancellationToken);
+
+            await writer.WriteMenuItemAsync(
+                type: '1',
+                display: "Pick another random game",
+                selector: $"/randomsteam/{steamId}",
+                host: serverInfo.PublicHost,
+                port: serverInfo.Port,
+                cancellationToken);
         }
 
         await writer.WriteInfoAsync(string.Empty, cancellationToken);

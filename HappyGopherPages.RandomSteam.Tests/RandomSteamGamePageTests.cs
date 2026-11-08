@@ -100,9 +100,68 @@ public sealed class RandomSteamGamePageTests
         Assert.EndsWith(".\r\n", response);
     }
 
+
+    [Fact]
+    public async Task WriteAsync_Subselector_PicksGameUsingSteamId()
+    {
+        StubRandomSteamClient client = new(new GameDetails
+        {
+            Id = 620,
+            Name = "Portal 2"
+        });
+
+        string response = await RenderAsync(
+            null,
+            client,
+            "/randomsteam/76561198000000000");
+
+        Assert.Equal(1, client.RequestCount);
+        Assert.Equal(76561198000000000L, client.LastSteamId);
+        Assert.Contains("Your game: Portal 2", response);
+        Assert.Contains(
+            "1Pick another random game\t/randomsteam/76561198000000000\tgopher.example.org\t70\r\n",
+            response);
+        Assert.EndsWith(".\r\n", response);
+    }
+
+    [Fact]
+    public async Task WriteAsync_SearchInput_IncludesRerollLink()
+    {
+        StubRandomSteamClient client = new(new GameDetails
+        {
+            Id = 400,
+            Name = "Portal"
+        });
+
+        string response = await RenderAsync("76561198000000000", client);
+
+        Assert.Equal(1, client.RequestCount);
+        Assert.Contains(
+            "1Pick another random game\t/randomsteam/76561198000000000\tgopher.example.org\t70\r\n",
+            response);
+    }
+
+    [Theory]
+    [InlineData("/randomsteam/")]
+    [InlineData("/randomsteam/not-a-steam-id")]
+    [InlineData("/randomsteam/76561198000000000/extra")]
+    public async Task WriteAsync_InvalidSubselector_DoesNotCallApi(string selector)
+    {
+        StubRandomSteamClient client = new();
+
+        string response = await RenderAsync(null, client, selector);
+
+        Assert.Equal(0, client.RequestCount);
+        Assert.Contains("Invalid Steam ID.", response);
+        Assert.DoesNotContain("1Pick another random game", response);
+        Assert.EndsWith(".\r\n", response);
+    }
+
+
     private static async Task<string> RenderAsync(
         string? input,
-        IRandomSteamClient client)
+        IRandomSteamClient client,
+        string selector = "/randomsteam")
     {
         RandomSteamGamePage page = new(
             new GopherServerInfo("gopher.example.org", 70),
@@ -112,7 +171,7 @@ public sealed class RandomSteamGamePageTests
         await using MemoryStream output = new();
 
         GopherResponseKind result = await page.WriteAsync(
-            new GopherRequest("/randomsteam", input),
+            new GopherRequest(selector, input),
             output,
             CancellationToken.None);
 
