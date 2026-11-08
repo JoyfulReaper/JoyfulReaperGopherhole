@@ -20,6 +20,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HappyGopherPages.Quotes\HappyGopherPages.Quotes.csproj" />
+    <ProjectReference Include="..\..\HappyGopher\HappyGopher\HappyGopher.csproj" />
   </ItemGroup>
+
+	<Target Name="StageQuotesPlugin" AfterTargets="Build">
+		<ItemGroup>
+			<QuotesPluginFiles Include="..\HappyGopherPages.Quotes\bin\$(Configuration)\$(TargetFramework)\**\*" />
+		</ItemGroup>
+
+		<Copy
+		  SourceFiles="@(QuotesPluginFiles)"
+		  DestinationFiles="@(QuotesPluginFiles->'$(OutDir)plugins\HappyGopherPages.Quotes\%(RecursiveDir)%(Filename)%(Extension)')"
+		  SkipUnchangedFiles="true" />
+	</Target>
 
 </Project>
