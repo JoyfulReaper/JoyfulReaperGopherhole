@@ -12,6 +12,8 @@
       <Private>false</Private>
       <ExcludeAssets>runtime</ExcludeAssets>
     </ProjectReference>
+	  <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.10" />
+	  <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.10" />
   </ItemGroup>
 
   <ItemGroup>
