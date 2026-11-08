@@ -56,6 +56,21 @@ public sealed class RandomSteamGamePage(
                         $"Playtime: {game.PlaytimeForever / 60.0:0.0} hours",
                         cancellationToken);
 
+                    string[] descriptionLines = SteamDescriptionFormatter
+                        .Format(game.Description)
+                        .ToArray();
+
+                    if (descriptionLines.Length > 0)
+                    {
+                        await writer.WriteInfoAsync(string.Empty, cancellationToken);
+                        await writer.WriteInfoAsync("Description:", cancellationToken);
+
+                        foreach (string line in descriptionLines)
+                        {
+                            await writer.WriteInfoAsync(line, cancellationToken);
+                        }
+                    }
+
                     if (game.Id > 0)
                     {
                         await writer.WriteMenuItemAsync(

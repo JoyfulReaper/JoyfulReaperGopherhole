@@ -147,6 +147,79 @@ public sealed class RandomSteamGamePageTests
         Assert.EndsWith(".\r\n", response);
     }
 
+
+    [Fact]
+    public async Task WriteAsync_Description_StripsHtmlAndDecodesEntities()
+    {
+        StubRandomSteamClient client = new(new GameDetails
+        {
+            Id = 620,
+            Name = "Portal 2",
+            Description = "<p>A <strong>clever</strong> game &amp; a lot of <em>fun</em>.</p>"
+        });
+
+        string response = await RenderAsync("76561198000000000", client);
+
+        Assert.Contains("iDescription:\t", response);
+        Assert.Contains("iA clever game & a lot of fun.\tfake\t(NULL)\t0", response);
+        Assert.DoesNotContain("<strong>", response);
+        Assert.DoesNotContain("&amp;", response);
+    }
+
+    [Fact]
+    public async Task WriteAsync_LongDescription_WrapsAndTruncates()
+    {
+        StubRandomSteamClient client = new(new GameDetails
+        {
+            Id = 620,
+            Name = "Portal 2",
+            Description = string.Join(' ', Enumerable.Repeat("portal", 200))
+        });
+
+        string response = await RenderAsync("76561198000000000", client);
+
+        string[] lines = response.Split("\r\n");
+        int headingIndex = Array.FindIndex(
+            lines,
+            line => line.StartsWith("iDescription:\t", StringComparison.Ordinal));
+
+        Assert.True(headingIndex >= 0);
+
+        string[] descriptionLines = lines
+            .Skip(headingIndex + 1)
+            .TakeWhile(line => line.StartsWith('i') && !line.StartsWith("i\t"))
+            .ToArray();
+
+        Assert.NotEmpty(descriptionLines);
+
+        foreach (string line in descriptionLines)
+        {
+            string display = line[1..line.IndexOf('\t')];
+            Assert.InRange(display.Length, 1, 70);
+        }
+
+        Assert.EndsWith("...", descriptionLines[^1].Split('\t')[0]);
+        Assert.EndsWith(".\r\n", response);
+    }
+
+    [Fact]
+    public async Task WriteAsync_EmptyDescription_OmitsDescriptionSection()
+    {
+        StubRandomSteamClient client = new(new GameDetails
+        {
+            Id = 620,
+            Name = "Portal 2",
+            Description = "<p>   </p>"
+        });
+
+        string response = await RenderAsync("76561198000000000", client);
+
+        Assert.DoesNotContain("iDescription:\t", response);
+        Assert.Contains("Your game: Portal 2", response);
+        Assert.EndsWith(".\r\n", response);
+    }
+
+
     private sealed class ThrowingRandomSteamClient(Exception exception) : IRandomSteamClient
     {
         public Task<GameDetails?> GetRandomGameAsync(
