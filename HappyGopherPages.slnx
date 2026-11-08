@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="../HappyGopher/HappyGopher.Extensibility/HappyGopher.Extensibility.csproj" />
+  <Project Path="HappyGopherPages.Quotes.Tests/HappyGopherPages.Quotes.Tests.csproj" />
   <Project Path="HappyGopherPages.Quotes/HappyGopherPages.Quotes.csproj" />
   <Project Path="HappyGopherPages.RandomSteam/HappyGopherPages.RandomSteam.csproj" />
 </Solution>

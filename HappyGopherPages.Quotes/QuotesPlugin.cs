@@ -1,6 +1,7 @@
 ﻿
 using HappyGopher.Extensibility;
 using HappyGopherPages.Quotes.Integrations.HappyQotd;
+using HappyGopherPages.Quotes.Pages;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -35,5 +36,7 @@ public sealed class QuotesPlugin : IHappyGopherPlugin
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
             client.Timeout = TimeSpan.FromMilliseconds(options.TimeoutMilliseconds);
         });
+        services.AddScoped<IGopherPage, QuoteOfTheDayPage>();
+        services.AddScoped<IGopherPage, RandomQuotePage>();
     }
 }
